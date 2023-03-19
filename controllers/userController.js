@@ -41,7 +41,7 @@ const registerUser = asyncHandler(async (req, res) => {
         await verificationEmailHandler(req.body.email)
         res.status(201).json({
             success: true,
-            message: "User Verification Successful",
+            message: "User Registration Successful",
             data: {}
         });
     } else {
@@ -94,9 +94,15 @@ const loginUser = asyncHandler(async (req, res) => {
         }).save();
         throw new ErrorResponse("New browser or device detected", 400);
     }
-    // Generate Token
-    const token = generateToken(user._id);
     if (user && passwordIsCorrect) {
+        // Generate Token
+        const userInfo = {
+            _id: user._id,
+            email: user.email,
+            name: user.name,
+            role: user.role
+        }
+        const token = generateToken(userInfo);
         // Send HTTP-only cookie
         res.cookie("token", token, {
             path: "/",
@@ -177,6 +183,9 @@ const loginWithCode = asyncHandler(async (req, res) => {
     if (!user) {
         throw new ErrorResponse("User not found", 404);
     }
+    if (!user.isVerified) {
+        throw new ErrorResponse("User not verified", 401)
+    }
     // Find user Login Token
     const userToken = await Token.findOne({
         userId: user.id,
@@ -195,7 +204,13 @@ const loginWithCode = asyncHandler(async (req, res) => {
         user.userAgent.push(thisUserAgent);
         await user.save();
         // Generate Token
-        const token = generateToken(user._id);
+        const userInfo = {
+            _id: user._id,
+            email: user.email,
+            name: user.name,
+            role: user.role
+        }
+        const token = generateToken(userInfo);
         // Send HTTP-only cookie
         res.cookie("token", token, {
             path: "/",
@@ -530,7 +545,13 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
         });
         if (newUser) {
             // Generate Token
-            const token = generateToken(newUser._id);
+            const userInfo = {
+                _id: newUser._id,
+                email: newUser.email,
+                name: newUser.name,
+                role: newUser.role
+            }
+            const token = generateToken(userInfo);
             // Send HTTP-only cookie
             res.cookie("token", token, {
                 path: "/",
@@ -559,7 +580,13 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
     }
     // User exists, login
     if (user) {
-        const token = generateToken(user._id);
+        const userInfo = {
+            _id: newUser._id,
+            email: newUser.email,
+            name: newUser.name,
+            role: newUser.role
+        }
+        const token = generateToken(userInfo);
         // Send HTTP-only cookie
         res.cookie("token", token, {
             path: "/",
