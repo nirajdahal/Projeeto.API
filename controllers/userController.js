@@ -1,4 +1,5 @@
 const asyncHandler = require("../middleware/async");
+const activeUsers = require("../global/ActiveUsers")
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const { generateToken, hashToken } = require("../utils");
@@ -10,6 +11,7 @@ const Token = require("../models/tokenModel");
 const crypto = require("crypto");
 const Cryptr = require("cryptr");
 const { OAuth2Client } = require("google-auth-library");
+const { sendNotification, postNotification } = require("./notificationController");
 const cryptr = new Cryptr(process.env.CRYPTR_KEY);
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const registerUser = asyncHandler(async (req, res) => {
@@ -385,8 +387,21 @@ const upgradeUser = asyncHandler(async (req, res) => {
     if (!user) {
         throw new ErrorResponse("User not found", 404);
     }
+    const allowedRoles = ["admin", "manager", "user", "team", "suspended"
+    ]
+    const isRoleAllowed = allowedRoles.includes(role)
+    if (!isRoleAllowed) {
+        throw new ErrorResponse(`The ${role} is not allowed`, 400)
+    }
     user.role = role;
     await user.save();
+    const notificationData = {
+        user: user,
+        message: `Your role has been upgraded to ${user.role} `,
+        type: "role-update",
+        read: "false"
+    }
+    await postNotification(notificationData)
     res.status(200).json({
         success: true,
         message: `User role updated to ${role}`,
@@ -581,10 +596,10 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
     // User exists, login
     if (user) {
         const userInfo = {
-            _id: newUser._id,
-            email: newUser.email,
-            name: newUser.name,
-            role: newUser.role
+            _id: user._id,
+            email: user.email,
+            name: user.name,
+            role: user.role
         }
         const token = generateToken(userInfo);
         // Send HTTP-only cookie
