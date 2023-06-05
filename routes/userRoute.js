@@ -24,14 +24,19 @@ const {
   sendLoginCode,
   loginWithCode,
   loginWithGoogle,
+  getAllManagers,
 } = require("../controllers/userController");
+const advancedResults = require("../middleware/advancedResult");
+const User = require("../models/userModel");
+const uploadFunc = require("../multer/multerConfig");
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/logout", logoutUser);
-router.get("/getUser", protect, getUser);
-router.patch("/updateUser", protect, updateUser);
+router.get("/getUser", protect, getUser)
+router.get("/getManagers", protect, adminOnly, getAllManagers)
+router.patch("/updateUser", uploadFunc.single('photo'), protect, updateUser);
 router.delete("/:id", protect, adminOnly, deleteUser);
-router.get("/getUsers", protect, adminOnly, getUsers);
+router.get("/getUsers", protect, adminOnly, advancedResults(User), getUsers);
 router.get("/loginStatus", loginStatus);
 router.post("/upgradeUser", protect, adminOnly, upgradeUser);
 router.post("/sendAutomatedEmail", protect, sendAutomatedEmail);

@@ -6,7 +6,10 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const userRoute = require("./routes/userRoute")
-const notificationRoute = require("./routes/notificationRoute");
+const notificationRoute = require("./routes/notificationRoute")
+const projectRoute = require("./routes/projectRoute")
+const stageRoute = require("./routes/stageRoute")
+const taskRoute = require("./routes/taskRoute")
 const errorHandler = require("./middleware/errorMiddleware");
 const initializeSocket = require('./socket/Socket');
 // import the initializeSocket function
@@ -24,9 +27,16 @@ app.use(
     credentials: true,
   })
 );
+app.options('*', cors({
+  origin: ["http://localhost:3000", "https://authz-app.vercel.app"],
+  credentials: true,
+}));
 // Routes
 app.use("/api/users", userRoute)
-app.use("/api/notifications", notificationRoute);
+app.use("/api/notifications", notificationRoute)
+app.use("/api/projects", projectRoute)
+app.use("/api/stages", stageRoute)
+app.use("/api/tasks", taskRoute)
 app.get("/", (req, res) => {
   res.send("Home Page");
 });

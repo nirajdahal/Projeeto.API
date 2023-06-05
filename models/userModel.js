@@ -31,7 +31,7 @@ const userSchema = mongoose.Schema(
     },
     bio: {
       type: String,
-      default: "bio",
+      default: "This is about me",
     },
     role: {
       type: String,

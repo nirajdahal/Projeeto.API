@@ -1,5 +1,4 @@
 const asyncHandler = require("../middleware/async");
-const activeUsers = require("../global/ActiveUsers")
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const { generateToken, hashToken } = require("../utils");
@@ -10,6 +9,7 @@ const ErrorResponse = require("../utils/errorResponse")
 const Token = require("../models/tokenModel");
 const crypto = require("crypto");
 const Cryptr = require("cryptr");
+const cloudinary = require('cloudinary').v2;
 const { OAuth2Client } = require("google-auth-library");
 const { sendNotification, postNotification } = require("./notificationController");
 const cryptr = new Cryptr(process.env.CRYPTR_KEY);
@@ -109,7 +109,7 @@ const loginUser = asyncHandler(async (req, res) => {
         res.cookie("token", token, {
             path: "/",
             httpOnly: true,
-            expires: new Date(Date.now() + 1000 * 86400), // 1 day
+            expires: new Date(Date.now() + 1000 * 86400 * 10), // 1 day
             sameSite: "none",
             secure: true,
         });
@@ -217,7 +217,7 @@ const loginWithCode = asyncHandler(async (req, res) => {
         res.cookie("token", token, {
             path: "/",
             httpOnly: true,
-            expires: new Date(Date.now() + 1000 * 86400), // 1 day
+            expires: new Date(Date.now() + 1000 * 86400 * 10), // 1 day
             sameSite: "none",
             secure: true,
         });
@@ -316,14 +316,29 @@ const getUser = asyncHandler(async (req, res) => {
 })
 // Update User
 const updateUser = asyncHandler(async (req, res) => {
+    const { photo } = req.body;
     const user = await User.findById(req.user._id);
+    if (!user) {
+        return res.status(404).json({
+            success: false,
+            message: "User couldnot be found",
+            data: {}
+        })
+    }
+    // Configuration 
+    cloudinary.config({
+        cloud_name: "dj6abhdlr",
+        api_key: "513453755898592",
+        api_secret: "ddRfqiEyreirSJ-aLo8DCbJe4eo"
+    });
+    const imageResponse = await cloudinary.uploader.upload(photo, { public_id: `${user.name}_Profile` })
     if (user) {
         const { name, email, phone, bio, photo, role, isVerified } = user;
         user.email = email;
-        user.name = req.body.name || name;
+        user.name = name;
         user.phone = req.body.phone || phone;
         user.bio = req.body.bio || bio;
-        user.photo = req.body.photo || photo;
+        user.photo = imageResponse.secure_url || photo;
         const updatedUser = await user.save();
         res.status(200).json({
             success: true,
@@ -362,11 +377,7 @@ const getUsers = asyncHandler(async (req, res) => {
     if (!users) {
         throw new ErrorResponse("Something went wrong", 500);
     }
-    res.status(200).json({
-        success: true,
-        message: "Here is the list of users",
-        data: users
-    });
+    res.status(200).json(res.advancedResults)
 })
 // Get Login Status
 const loginStatus = asyncHandler(async (req, res) => {
@@ -397,6 +408,7 @@ const upgradeUser = asyncHandler(async (req, res) => {
     await user.save();
     const notificationData = {
         user: user,
+        updatedBy: req.user,
         message: `Your role has been upgraded to ${user.role} `,
         type: "role-update",
         read: "false"
@@ -528,7 +540,7 @@ const changePassword = asyncHandler(async (req, res) => {
         await user.save();
         res
             .status(200)
-            .json({ success: true, message: "Password change successful, please re-login", data: {} });
+            .json({ success: true, message: "Password changed successful", data: {} });
     } else {
         throw new ErrorResponse("Old password is incorrect", 400);
     }
@@ -571,7 +583,7 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
             res.cookie("token", token, {
                 path: "/",
                 httpOnly: true,
-                expires: new Date(Date.now() + 1000 * 86400), // 1 day
+                expires: new Date(Date.now() + 1000 * 86400 * 10), // 1 day
                 sameSite: "none",
                 secure: true,
             });
@@ -606,7 +618,7 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
         res.cookie("token", token, {
             path: "/",
             httpOnly: true,
-            expires: new Date(Date.now() + 1000 * 86400), // 1 day
+            expires: new Date(Date.now() + 1000 * 86400 * 10), // 1 day
             sameSite: "none",
             secure: true,
         });
@@ -676,7 +688,16 @@ const verificationEmailHandler = async (email) => {
         throw new ErrorResponse("Email not sent, please try again", 500);
     }
 }
+const getAllManagers = asyncHandler(async (req, res) => {
+    const allManagers = await User.find({ role: 'manager' }).select('name email photo')
+    res.status(200).json({
+        message: "All managers ",
+        success: true,
+        data: allManagers
+    })
+})
 module.exports = {
+    getAllManagers,
     registerUser,
     loginUser,
     logoutUser,
