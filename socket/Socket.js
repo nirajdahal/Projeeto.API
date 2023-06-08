@@ -18,8 +18,6 @@ function initializeSocket() {
         }
     });
     io.on('connection', (socket) => {
-        const myId = socket.id;
-        // console.log(myId);
         console.log("A user connected")
         socket.on("disconnect", () => {
             // remove user from active users
@@ -30,7 +28,6 @@ function initializeSocket() {
         });
         io.to(socket.id).emit("test", socket.id);
         socket.on("new-user-add", (newUserId) => {
-            console.log("new user add emitted")
             // if user is not added previously
             if (!activeUsers.some((user) => user.userId === newUserId)) {
                 activeUsers.push({ userId: newUserId, socketId: socket.id });
@@ -41,7 +38,7 @@ function initializeSocket() {
         });
         socket.on("send-notification", (toUserId, type) => {
             const user = activeUsers.find((user) => user.userId === toUserId);
-            console.log("Data: TYhis is my data and it has been fired ")
+            console.log("Data: This is my data and it has been fired ")
             console.log(type)
             if (user) {
                 if (type === "role update") {
@@ -49,6 +46,10 @@ function initializeSocket() {
                 }
             }
         });
+        socket.on("get-active-users", () => {
+            // send all active users to new user
+            io.to(socket.id).emit("get-users", activeUsers);
+        })
     });
     return io;
 }

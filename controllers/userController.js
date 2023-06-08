@@ -696,8 +696,17 @@ const getAllManagers = asyncHandler(async (req, res) => {
         data: allManagers
     })
 })
+const getAllTeamMembers = asyncHandler(async (req, res) => {
+    const allTeamMembers = await User.find({ role: 'team' }).select('name email photo')
+    res.status(200).json({
+        message: "All team ",
+        success: true,
+        data: allTeamMembers
+    })
+})
 module.exports = {
     getAllManagers,
+    getAllTeamMembers,
     registerUser,
     loginUser,
     logoutUser,

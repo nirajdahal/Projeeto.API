@@ -25,6 +25,7 @@ const {
   loginWithCode,
   loginWithGoogle,
   getAllManagers,
+  getAllTeamMembers,
 } = require("../controllers/userController");
 const advancedResults = require("../middleware/advancedResult");
 const User = require("../models/userModel");
@@ -34,6 +35,7 @@ router.post("/login", loginUser);
 router.get("/logout", logoutUser);
 router.get("/getUser", protect, getUser)
 router.get("/getManagers", protect, adminOnly, getAllManagers)
+router.get("/getTeam", protect, getAllTeamMembers)
 router.patch("/updateUser", uploadFunc.single('photo'), protect, updateUser);
 router.delete("/:id", protect, adminOnly, deleteUser);
 router.get("/getUsers", protect, adminOnly, advancedResults(User), getUsers);
