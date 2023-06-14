@@ -2,7 +2,9 @@ const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errorResponse');
 const Task = require('../models/taskModel');
 const Project = require('../models/projectModel');
-const Stage = require('../models/stageModel')
+const Stage = require('../models/stageModel');
+const { postNotification } = require('./notificationController');
+const User = require('../models/userModel');
 // @desc    Create a new task
 // @route   POST /projects/:projectId/stages/:stageId/tasks
 // @access  Private
@@ -10,6 +12,23 @@ const createTask = asyncHandler(async (req, res) => {
     const { name, description, priority, type, stage, assignees } = req.body;
     const task = new Task({ name, description, priority, type, stage, assignees });
     await task.save();
+    if (assignees) {
+        for (const assignee of assignees) {
+            const user = await User.findById(assignee);
+            const notificationData = {
+                user: user,
+                updatedBy: req.user,
+                message: `You have been assigned to new Task `,
+                type: "ticket-added",
+                read: "false",
+                details: {
+                    stageId: stage,
+                    taskId: task._id
+                }
+            };
+            await postNotification(notificationData);
+        }
+    }
     res.status(201).json({ success: true, data: task });
 });
 // @desc    Get all tasks
@@ -23,10 +42,12 @@ const getAllTasks = asyncHandler(async (req, res) => {
 // @route   GET /projects/:projectId/stages/:stageId/tasks/:id
 // @access  Private
 const getTaskById = asyncHandler(async (req, res) => {
-    const task = await Task.findById(req.params.id).populate('assignees');
+    const task = await Task.findById(req.params.id).populate('assignees', '_id').lean();
+    const assigneeIds = task.assignees.map(assignee => assignee._id);
     if (!task) {
         throw new ErrorResponse("Task not found with ID: ${req.params.id}", 404);
     }
+    task.assignees = assigneeIds
     res.status(200).json({ success: true, data: task });
 });
 // @desc    Update an existing task
@@ -34,15 +55,47 @@ const getTaskById = asyncHandler(async (req, res) => {
 // @access  Private
 const updateTask = asyncHandler(async (req, res) => {
     const { name, description, priority, type, stage, assignees } = req.body;
-    const task = await Task.findByIdAndUpdate(
-        req.params.id,
-        { $set: { name, description, priority, type, stage, assignees } },
-        { new: true }
-    );
+    const task = await Task.findById(req.params.id).populate('assignees', '_id');
     if (!task) {
         throw new ErrorResponse("Task not found with ID: ${req.params.id}", 404);
+    } else {
+        task.name = name;
+        task.description = description;
+        task.priority = priority;
+        task.type = type;
+        task.stage = stage;
+        task.assignees = assignees;
     }
-    res.status(200).json({ success: true, data: task });
+    if (assignees && task.assignees) {
+        const previousAssignees = task.assignees.map(assignee => assignee._id);
+        const newAssignees = assignees.filter(userId => {
+            if (!previousAssignees) {
+                return true;
+            }
+            return !previousAssignees.includes(userId);
+        })
+        for (const assignee of newAssignees) {
+            const user = await User.findById(assignee);
+            const notificationData = {
+                user: user,
+                updatedBy: req.user,
+                message: `You have been assigned to a Task `,
+                type: "ticket-added",
+                read: "false",
+                details: {
+                    stageId: stage,
+                    taskId: task._id
+                }
+            };
+            await postNotification(notificationData);
+        }
+    }
+    //check if the assignee exist in previous task and save notification for only newly assigned users
+    await task.save()
+    const updatedTask = await Task.findById(task._id).populate('assignees', '_id').lean()
+    let taskToReturn = updatedTask
+    taskToReturn.assignees = updatedTask.assignees.map(assignee => assignee._id)
+    res.status(200).json({ success: true, message: "Task updated succesfully", data: taskToReturn });
 });
 // @desc    Delete a task by ID
 // @route   DELETE /projects/:projectId/stages/:stageId/tasks/:id

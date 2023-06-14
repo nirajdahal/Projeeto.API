@@ -5,7 +5,8 @@ const notificationSchema = new mongoose.Schema(
         updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
         message: { type: String, required: true },
         read: { type: Boolean, default: false },
-        type: { type: String, required: true }
+        type: { type: String, required: true },
+        details: { type: Object }
     },
     { timestamps: true }
 );

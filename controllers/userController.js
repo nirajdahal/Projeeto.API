@@ -697,7 +697,7 @@ const getAllManagers = asyncHandler(async (req, res) => {
     })
 })
 const getAllTeamMembers = asyncHandler(async (req, res) => {
-    const allTeamMembers = await User.find({ role: 'team' }).select('name email photo')
+    const allTeamMembers = await User.find({ $or: [{ role: 'team' }, { role: 'manager' }] }).select('name email photo')
     res.status(200).json({
         message: "All team ",
         success: true,

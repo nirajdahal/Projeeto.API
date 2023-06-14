@@ -41,7 +41,7 @@ function initializeSocket() {
             console.log("Data: This is my data and it has been fired ")
             console.log(type)
             if (user) {
-                if (type === "role update") {
+                if (type === "role update" || type === "ticket-added") {
                     io.to(user.socketId).emit("get-notification", type);
                 }
             }
