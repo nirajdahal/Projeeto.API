@@ -5,7 +5,7 @@ const ProjectSchema = new mongoose.Schema({
         required: [true, 'Please add a name'],
         unique: true,
         trim: true,
-        maxlength: [20, 'Name can not be more than 20 characters']
+        maxlength: [30, 'Name can not be more than 30 characters']
     },
     description: {
         type: String,

@@ -10,7 +10,7 @@ const User = require('../models/userModel');
 // @access  Private
 const createTask = asyncHandler(async (req, res) => {
     const { name, description, priority, type, stage, assignees } = req.body;
-    const task = new Task({ name, description, priority, type, stage, assignees });
+    const task = new Task({ name, description, priority, type, stage, assignees, createdBy: req.user });
     await task.save();
     if (assignees) {
         for (const assignee of assignees) {

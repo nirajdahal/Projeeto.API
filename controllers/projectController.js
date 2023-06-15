@@ -1,6 +1,7 @@
 const asyncHandler = require('../middleware/async')
 const ErrorResponse = require('../middleware/errorMiddleware')
-const Project = require('../models/projectModel')
+const Project = require('../models/projectModel');
+const Task = require('../models/taskModel');
 // @desc    Create a new project
 // @route   POST /projects
 // @access  Private
@@ -8,7 +9,7 @@ const createProject = asyncHandler(async (req, res) => {
     const { name, description, manager } = req.body;
     const project = new Project({ name, description, manager });
     await project.save();
-    res.status(201).json({ success: true, data: project });
+    res.status(201).json({ success: true, message: "Project Created Successfully", data: project });
 });
 // @desc    Get all projects
 // @route   GET /projects
@@ -16,6 +17,48 @@ const createProject = asyncHandler(async (req, res) => {
 const getAllProjects = asyncHandler(async (req, res) => {
     const projects = await Project.find().populate('managers');
     res.status(200).json({ success: true, data: projects });
+});
+// @desc    Get all projects
+// @route   GET /projects
+// @access  Private
+const getAllTeamProjects = asyncHandler(async (req, res) => {
+    const userId = req.user._id
+    const result = await Task.aggregate([
+        {
+            $lookup: {
+                from: 'stages',
+                localField: 'stage',
+                foreignField: '_id',
+                as: 'stage'
+            }
+        },
+        {
+            $unwind: '$stage'
+        },
+        {
+            $match: {
+                assignees: userId
+            }
+        },
+        {
+            $group: {
+                _id: '$stage.project',
+                project: {
+                    $first: '$stage.project'
+                }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                project: 1
+            }
+        }
+    ]);
+    const projects = result.map((item) => ({
+        project: item.project,
+        manager: item.manager,
+    }));
 });
 // @desc    Get a single project by ID
 // @route   GET /projects/:id
@@ -57,5 +100,6 @@ module.exports = {
     getAllProjects,
     getProjectById,
     updateProject,
-    deleteProjectById
+    deleteProjectById,
+    getAllTeamProjects
 };

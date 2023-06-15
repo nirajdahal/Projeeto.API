@@ -13,9 +13,11 @@ const {
     getAllProjects,
     getProjectById,
     updateProject,
-    deleteProjectById
+    deleteProjectById,
+    getAllTeamProjects
 } = require("../controllers/projectController")
-router.get("/", protect, getAllProjects)
+router.get("/", protect, getAllProjects),
+    router.get("/user", protect, getAllTeamProjects)
 router.get("/:id", protect, getProjectById)
 router.post("/", protect, createProject)
 router.put("/:id", protect, updateProject)
