@@ -19,46 +19,74 @@ const getAllProjects = asyncHandler(async (req, res) => {
     res.status(200).json({ success: true, data: projects });
 });
 // @desc    Get all projects
-// @route   GET /projects
+// @route   GET /projects/user
 // @access  Private
 const getAllTeamProjects = asyncHandler(async (req, res) => {
     const userId = req.user._id
-    const result = await Task.aggregate([
-        {
-            $lookup: {
-                from: 'stages',
-                localField: 'stage',
-                foreignField: '_id',
-                as: 'stage'
-            }
-        },
-        {
-            $unwind: '$stage'
-        },
-        {
-            $match: {
-                assignees: userId
-            }
-        },
-        {
-            $group: {
-                _id: '$stage.project',
-                project: {
-                    $first: '$stage.project'
+    if (req.user.role === 'team') {
+        const result = await Task.aggregate([
+            {
+                $lookup: {
+                    from: 'stages',
+                    localField: 'stage',
+                    foreignField: '_id',
+                    as: 'stage'
+                }
+            },
+            {
+                $unwind: '$stage'
+            },
+            {
+                $match: {
+                    assignees: userId
+                }
+            },
+            {
+                $group: {
+                    _id: '$stage.project',
+                    project: {
+                        $first: '$stage.project'
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    project: 1
                 }
             }
-        },
-        {
-            $project: {
-                _id: 0,
-                project: 1
-            }
+        ]);
+        const projects = result.map((item) => ({
+            project: item.project,
+        }));
+        const finalResponse = []
+        for (let i = 0; i < projects.length; i++) {
+            const project = await Project.findById(projects[i].project, 'name description ')
+                .populate({
+                    path: 'manager',
+                    select: 'name  photo'
+                })
+                .exec();
+            finalResponse.push(project)
         }
-    ]);
-    const projects = result.map((item) => ({
-        project: item.project,
-        manager: item.manager,
-    }));
+        res.status(200).json({ success: true, message: "All project related to the team", data: finalResponse })
+    }
+    if (req.user.role === 'manager') {
+        const projects = await Project.find({ manager: userId }).select('name description')
+            .populate({
+                path: 'manager',
+                select: 'name  photo'
+            })
+        res.status(200).json({ success: true, message: "All project related to the team", data: projects })
+    }
+    if (req.user.role === 'admin') {
+        const projects = await Project.find().select('name description')
+            .populate({
+                path: 'manager',
+                select: 'name  photo'
+            })
+        res.status(200).json({ success: true, message: "All project related to the team", data: projects })
+    }
 });
 // @desc    Get a single project by ID
 // @route   GET /projects/:id
@@ -89,10 +117,11 @@ const updateProject = asyncHandler(async (req, res) => {
 // @route   DELETE /projects/:id
 // @access  Private
 const deleteProjectById = asyncHandler(async (req, res) => {
-    const project = await Project.findByIdAndDelete(req.params.id);
+    const project = await Project.findById(req.params.id);
     if (!project) {
         throw new ErrorResponse(`Project not found with ID: ${req.params.id}`, 404);
     }
+    project.remove(req.params.id)
     res.status(200).json({ success: true, data: {} });
 });
 module.exports = {
