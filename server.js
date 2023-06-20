@@ -10,6 +10,7 @@ const notificationRoute = require("./routes/notificationRoute")
 const projectRoute = require("./routes/projectRoute")
 const stageRoute = require("./routes/stageRoute")
 const taskRoute = require("./routes/taskRoute")
+const dashboardRoute = require("./routes/dashboardRoute")
 const errorHandler = require("./middleware/errorMiddleware");
 const initializeSocket = require('./socket/Socket');
 // import the initializeSocket function
@@ -37,6 +38,7 @@ app.use("/api/notifications", notificationRoute)
 app.use("/api/projects", projectRoute)
 app.use("/api/stages", stageRoute)
 app.use("/api/tasks", taskRoute)
+app.use("/api/dashboard", dashboardRoute)
 app.get("/", (req, res) => {
   res.send("Home Page");
 });

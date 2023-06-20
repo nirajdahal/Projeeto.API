@@ -92,7 +92,7 @@ const getAllTeamProjects = asyncHandler(async (req, res) => {
 // @route   GET /projects/:id
 // @access  Private
 const getProjectById = asyncHandler(async (req, res) => {
-    const project = await Project.findById(req.params.id).populate('managers');
+    const project = await Project.findById(req.params.id).populate('manager');
     if (!project) {
         throw new ErrorResponse(`Project not found with ID: ${req.params.id}`, 404);
     }
@@ -102,10 +102,14 @@ const getProjectById = asyncHandler(async (req, res) => {
 // @route   PUT /projects/:id
 // @access  Private
 const updateProject = asyncHandler(async (req, res) => {
-    const { name, description, managers } = req.body;
+    const { name, description, manager } = req.body;
+    let managerId = manager;
+    if (req.user.role === 'manager') {
+        managerId = req.user._id
+    }
     const project = await Project.findByIdAndUpdate(
         req.params.id,
-        { $set: { name, description, managers } },
+        { $set: { name, description, managerId } },
         { new: true }
     );
     if (!project) {
