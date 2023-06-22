@@ -6,7 +6,7 @@ router.use('/:projectId/stages', stageRouter)
 const {
     protect,
     adminOnly,
-    authorOnly,
+    managerAndAdminOnly,
 } = require("../middleware/authMiddleware")
 const {
     createProject,
@@ -19,7 +19,7 @@ const {
 router.get("/", protect, getAllProjects),
     router.get("/user", protect, getAllTeamProjects)
 router.get("/:id", protect, getProjectById)
-router.post("/", protect, createProject)
-router.put("/:id", protect, updateProject)
-router.delete("/:id", protect, deleteProjectById)
+router.post("/", protect, adminOnly, createProject)
+router.put("/:id", protect, managerAndAdminOnly, updateProject)
+router.delete("/:id", protect, adminOnly, deleteProjectById)
 module.exports = router

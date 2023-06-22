@@ -1,7 +1,6 @@
 const nodemailer = require("nodemailer");
 const hbs = require("nodemailer-express-handlebars");
 const path = require("path");
-
 const sendEmail = async (
   subject,
   send_to,
@@ -9,7 +8,8 @@ const sendEmail = async (
   reply_to,
   template,
   name,
-  link
+  link,
+  message = "Sent From Admin"
 ) => {
   // Create Email Transporter
   const transporter = nodemailer.createTransport({
@@ -23,7 +23,6 @@ const sendEmail = async (
       rejectUnauthorized: false,
     },
   });
-
   const handlearOptions = {
     viewEngine: {
       extName: ".handlebars",
@@ -33,9 +32,7 @@ const sendEmail = async (
     viewPath: path.resolve("./views"),
     extName: ".handlebars",
   };
-
   transporter.use("compile", hbs(handlearOptions));
-
   // Options f0r sending email
   const options = {
     from: sent_from,
@@ -46,9 +43,9 @@ const sendEmail = async (
     context: {
       name,
       link,
+      message
     },
   };
-
   // Send Email
   transporter.sendMail(options, function (err, info) {
     if (err) {
@@ -58,5 +55,4 @@ const sendEmail = async (
     }
   });
 };
-
 module.exports = sendEmail;

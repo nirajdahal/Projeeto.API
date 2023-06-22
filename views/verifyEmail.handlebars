@@ -1,41 +1,134 @@
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <style>
-      body { background-color: #0a1930; padding: 30px; font-family: Arial,
-      Helvetica, sans-serif; } .container { background-color: #eee; padding:
-      10px; border-radius: 3px; } .color-primary { color: #007bff; }
-      .color-danger { color: orangered; } .color-success { color: #28a745; }
-      .color-white { color: #fff; } .color-blue { color: #0a1930; } a {
-      font-size: 1.4rem; text-decoration: none; } .btn { font-size: 1.4rem;
-      font-weight: 400; padding: 6px 8px; margin: 0 5px 0 0; border: 1px solid
-      transparent; border-radius: 3px; cursor: pointer; } .btn-primary { color:
-      #fff; background: #007bff; } .btn-secondary { color: #fff; border: 1px
-      solid #fff; background: transparent; } .btn-danger { color: #fff;
-      background: orangered; } .btn-success { color: #fff; background: #28a745;
-      } .flex-center { display: flex; justify-content: center; align-items:
-      center; } .logo { padding: 5px; background-color: #1f93ff; } .my { margin:
-      2rem 0; }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="logo flex-center">
-        <h2 class="color-white">AUTH:Z</h2>
-      </div>
-      <h2>Hello <span class="color-danger">{{name}}</span></h2>
-      <p>Please use the url below to verify your account</p>
-      <p>This link is valid for 1hrs</p>
 
-      <a href={{link}} class="btn btn-success">Verify Account</a>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projeeto Account Verification</title>
+  <style>
+    /* Global styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-      <div class="my">
-        <p>Regards...</p>
-        <p><b class="color-danger">AUTH:Z</b> Team</p>
-      </div>
+    body {
+      background-color: #0a1930;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    /* Header styles */
+    .header {
+      display: flex;
+      justify-content: center;
+    }
+
+    .logo {
+      padding: 5px;
+      background-color: #1f93ff;
+      margin-right: 10px;
+    }
+
+    .logo h2 {
+      color: #fff;
+      font-size: 2rem;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    /* Content styles */
+    .content {
+      background-color: #eee;
+      border-radius: 3px;
+      margin: 2rem auto;
+      max-width: 600px;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .content h2 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      text-transform: capitalize;
+    }
+
+    .content p {
+      font-size: 1.6rem;
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+
+    /* Button styles */
+    .btn {
+      background-color: #007bff;
+      border: none;
+      border-radius: 3px;
+      color: #fff;
+      cursor: pointer;
+      display: inline-block;
+      font-size: 1.6rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      padding: 10px 20px;
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+
+    .btn:focus,
+    .btn:hover {
+      background-color: #0062cc;
+      outline: none;
+    }
+
+    .btn--success {
+      background-color: #28a745;
+    }
+
+    .btn--danger {
+      background-color: #dc3545;
+    }
+
+    /* Footer styles */
+    .footer {
+      color: #fff;
+      font-size: 1.4rem;
+      margin-top: 2rem;
+      text-align: center;
+    }
+
+    .footer p {
+      margin-bottom: 1rem;
+    }
+
+    .footer p:last-child {
+      font-size: 1.6rem;
+      font-weight: bold;
+    }
+
+    .footer a {
+      color: #fff;
+      font-weight: bold;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="header">
+    <div class="logo">
+      <h2>Projeeto</h2>
     </div>
-  </body>
+  </header>
+  <div class="content">
+    <h2>Hello <span class="color-danger">{{name}}</span></h2>
+    <p>Please use the link below to verify your account. This link is valid for 1 hour.</p>
+    <a href="{{link}}" class="btn btn--success">Verify Account</a>
+  </div>
+  <footer class="footer">
+    <p>Regards...</p>
+    <p>Projeeto Team</p>
+  </footer>
+</body>
+
 </html>

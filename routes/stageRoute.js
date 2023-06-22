@@ -6,7 +6,7 @@ router.use("/:stageId/tasks", taskRouter)
 const {
     protect,
     adminOnly,
-    authorOnly,
+    managerAndAdminOnly,
 } = require("../middleware/authMiddleware")
 const {
     createStage,
@@ -16,7 +16,7 @@ const {
 } = require("../controllers/stageController")
 router.get("/", protect, getAllStages)
 router.get("/:id", protect, getStageById)
-router.post("/", protect, createStage)
-router.put("/:id", protect, updateStage)
+router.post("/", protect, managerAndAdminOnly, createStage)
+router.put("/:id", protect, managerAndAdminOnly, updateStage)
 // router.delete("/:id", protect, deleteProjectById)
 module.exports = router

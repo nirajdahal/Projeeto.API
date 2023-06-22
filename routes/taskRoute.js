@@ -3,7 +3,7 @@ const router = express.Router({ mergeParams: true });
 const {
     protect,
     adminOnly,
-    authorOnly,
+    managerAndAdminOnlyly,
 } = require("../middleware/authMiddleware")
 const {
     createTask,

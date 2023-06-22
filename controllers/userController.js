@@ -151,10 +151,10 @@ const sendLoginCode = asyncHandler(async (req, res) => {
     const loginCode = userToken.lToken;
     const decryptedLoginCode = cryptr.decrypt(loginCode);
     // Send Login Code
-    const subject = "Login Access Code - AUTH:Z";
+    const subject = "Login Access Code - Projeeto";
     const send_to = email;
     const sent_from = process.env.EMAIL_USER;
-    const reply_to = "noreply@zino.com";
+    const reply_to = "projeeto@gmail.com";
     const template = "loginCode";
     const name = user.name;
     const link = decryptedLoginCode;
@@ -414,6 +414,24 @@ const upgradeUser = asyncHandler(async (req, res) => {
         read: "false"
     }
     await postNotification(notificationData)
+    try {
+        await sendEmail(
+            subject = "Role Chnage",
+            send_to = user.email,
+            sent_from = process.env.EMAIL_USER,
+            reply_to = "projeeto@gmail.com",
+            template = "changeRole",
+            name = user.name,
+            link = process.env.FRONTEND_URL,
+        )
+    }
+    catch (e) {
+        res.status(200).json({
+            success: true,
+            message: `User role updated to ${role}`,
+            data: {}
+        });
+    }
     res.status(200).json({
         success: true,
         message: `User role updated to ${role}`,
@@ -422,7 +440,7 @@ const upgradeUser = asyncHandler(async (req, res) => {
 })
 // Send Automated emails
 const sendAutomatedEmail = asyncHandler(async (req, res) => {
-    const { subject, send_to, reply_to, template, url } = req.body;
+    const { subject, send_to, reply_to = "projeeto@gmail.com", template = "general", url = "", message } = req.body;
     if (!subject || !send_to || !reply_to || !template) {
         throw new ErrorResponse("Missing email parameter", 500);
     }
@@ -442,10 +460,45 @@ const sendAutomatedEmail = asyncHandler(async (req, res) => {
             reply_to,
             template,
             name,
-            link
+            link,
+            message
         );
         res.status(200).json({ success: true, message: "Email Sent", data: {} });
     } catch (error) {
+        throw new ErrorResponse("Email not sent, please try again", 500);
+    }
+})
+// Send Automated general emails to Users
+const sendEmailToUsers = asyncHandler(async (req, res) => {
+    const { subject, reply_to = "projeeto@gmail.com", url = "", message, usersToSend } = req.body;
+    const template = "general"
+    if (!subject || !usersToSend || !reply_to || !template) {
+        throw new ErrorResponse("Missing email parameter", 500);
+    }
+    //loops in all the users to send
+    try {
+        for (let i = 0; i < usersToSend.length; i++) {
+            // Get user
+            const user = await User.findById(usersToSend[i]);
+            if (user) {
+                const sent_from = process.env.EMAIL_USER;
+                const name = user.name;
+                const link = `${process.env.FRONTEND_URL}${url}`;
+                await sendEmail(
+                    subject,
+                    send_to = user.email,
+                    sent_from,
+                    reply_to,
+                    template,
+                    name,
+                    link,
+                    message
+                );
+            }
+        }
+        res.status(200).json({ success: true, message: "Email Sent", data: {} });
+    }
+    catch (error) {
         throw new ErrorResponse("Email not sent, please try again", 500);
     }
 })
@@ -475,10 +528,10 @@ const forgotPassword = asyncHandler(async (req, res) => {
     // Construct Reset URL
     const resetUrl = `${process.env.FRONTEND_URL}/resetPassword/${resetToken}`;
     // Send Email
-    const subject = "Password Reset Request - AUTH:Z";
+    const subject = "Password Reset Request - Projeeto";
     const send_to = user.email;
     const sent_from = process.env.EMAIL_USER;
-    const reply_to = "noreply@zino.com";
+    const reply_to = "projeeto@gmail.com";
     const template = "forgotPassword";
     const name = user.name;
     const link = resetUrl;
@@ -667,10 +720,10 @@ const verificationEmailHandler = async (email) => {
     // Construct Verification URL
     const verificationUrl = `${process.env.FRONTEND_URL}/verify/${verificationToken}`;
     // Send Email
-    const subject = "Verify Your Account - AUTH:Z";
+    const subject = "Verify Your Account - Projeeto";
     const send_to = user.email;
     const sent_from = process.env.EMAIL_USER;
-    const reply_to = "noreply@zino.com";
+    const reply_to = "projeeto@gmail.com";
     const template = "verifyEmail";
     const name = user.name;
     const link = verificationUrl;
@@ -704,6 +757,19 @@ const getAllTeamMembers = asyncHandler(async (req, res) => {
         data: allTeamMembers
     })
 })
+const getAllMembersById = asyncHandler(async (req, res) => {
+    const { ids } = req.body
+    const users = []
+    for (let i = 0; i < ids.length; i++) {
+        const user = await User.findById(ids[i]).select('name email photo')
+        users.push(user)
+    }
+    res.status(200).json({
+        message: "All Members  ",
+        success: true,
+        data: users
+    })
+})
 module.exports = {
     getAllManagers,
     getAllTeamMembers,
@@ -711,6 +777,7 @@ module.exports = {
     loginUser,
     logoutUser,
     getUser,
+    getAllMembersById,
     updateUser,
     deleteUser,
     getUsers,
@@ -725,4 +792,5 @@ module.exports = {
     sendLoginCode,
     loginWithCode,
     loginWithGoogle,
+    sendEmailToUsers,
 };
